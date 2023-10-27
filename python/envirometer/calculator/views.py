@@ -1,8 +1,16 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.http import HttpResponseRedirect
+from django.db import models
+import json
+from django import forms
 
 def index(request):
+    try:
+        request_data = json.loads(request.body.decode('utf-8'))
+    except json.JSONDecodeError as e:
+        # Handle the JSON decoding error
+        return HttpResponse(f"Error decoding JSON: {str(e)}", status=400)
     # Emission factors in kg CO2 equivalent per kilometer for different activities
     emission_factors = {
         'car': 0.2,    # A car emits 0.2 kg CO2 per km
@@ -10,24 +18,34 @@ def index(request):
         'train': 0.05, # A train emits 0.05 kg CO2 per km
         'bike': 0.0,   # Biking is assumed to produce no emissions
         'walk': 0.0,   # Walking is also assumed to produce no emissions
+        'cook': 0.4,
     }
 
     # Function to calculate carbon emissions
-    def calculate_emissions(activity, distance):
+    def calculate_emissions(activity, distance,name,description):
         if activity in emission_factors:
             emission_factor = emission_factors[activity]
             emissions = emission_factor * distance
+            name=name
+            description=description
             return emissions
         else:
             return "Activity not found in the database"
 
     # User input
-    activity = 'car'
-    distance = 500
 
     # Calculate carbon emissions
-    emissions = calculate_emissions(activity, distance)
-
+    emissions = calculate_emissions(request_data['activity'], request_data['distance'],request_data['name'],request_data['description'])
+    
+    class Book(models.Model):
+        id = models.AutoField(primary_key=True)
+        name = models.CharField(max_length=100)
+        type = models.CharField(max_length=100)
+        description = models.DateField()
+        carbon_emited = models.CharField(max_length=13)
+    
+    
+    
     # Display the result
     if isinstance(emissions, str):
         return HttpResponse(emissions)
