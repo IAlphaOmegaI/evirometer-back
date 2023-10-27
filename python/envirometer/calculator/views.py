@@ -4,6 +4,7 @@ from django.http import HttpResponseRedirect
 from django.db import models
 import json
 from django import forms
+from calculator.models import Book
 
 def index(request):
     try:
@@ -37,15 +38,16 @@ def index(request):
     # Calculate carbon emissions
     emissions = calculate_emissions(request_data['activity'], request_data['distance'],request_data['name'],request_data['description'])
     
-    class Book(models.Model):
-        id = models.AutoField(primary_key=True)
-        name = models.CharField(max_length=100)
-        type = models.CharField(max_length=100)
-        description = models.DateField()
-        carbon_emited = models.CharField(max_length=13)
-    
-    
-    
+    john = Book.objects.create(
+        name=activity,
+        type=activity,
+        description=description,
+        carbon_emited=emissions
+    )
+
+    print(john)
+    # output: <Contact: Contact object (1)>
+
     # Display the result
     if isinstance(emissions, str):
         return HttpResponse(emissions)
